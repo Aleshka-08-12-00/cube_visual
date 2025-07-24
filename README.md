@@ -23,6 +23,7 @@ The backend will be available at `http://localhost:8000`. Endpoints:
 
 - `POST /query` – run an MDX query ({"mdx": "..."})
 - `GET /fields` – list available cube dimensions and measures
+- `GET /health` – verify cube connection
 - `GET /reports` – list saved reports
 - `POST /reports` – save a new report ({"name": "Report", "mdx": "..."})
 
