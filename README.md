@@ -48,3 +48,13 @@ docker build -t cube-backend .
 docker run -p 8000:8000 -e ADOMD_CONNECTION="<connection>" cube-backend
 ```
 
+
+## Running the backend with Docker Compose
+
+Set the `ADOMD_CONNECTION` environment variable and run:
+
+```bash
+ADOMD_CONNECTION="<connection>" docker compose up --build
+```
+
+The backend will be available at `http://localhost:8000`.
