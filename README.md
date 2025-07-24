@@ -13,13 +13,10 @@ and uses **pyadomd** and **pymdx** to query the cube. The frontend is built with
 
 ## Running the backend
 
+Build and start the backend using Docker Compose:
+
 ```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-# run development server
-./start.sh
+docker compose up --build
 ```
 
 The backend will be available at `http://localhost:8000`. Endpoints:
