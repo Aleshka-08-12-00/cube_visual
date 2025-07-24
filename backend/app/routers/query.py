@@ -4,7 +4,7 @@ from ..config import settings
 
 try:
     from pyadomd import Pyadomd
-except ImportError:  # fallback if pyadomd not installed
+except Exception:  # fallback if pyadomd is unavailable or fails to load
     Pyadomd = None
 
 router = APIRouter(prefix="/query", tags=["query"])
