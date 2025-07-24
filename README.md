@@ -9,7 +9,7 @@ and uses **pyadomd** and **pymdx** to query the cube. The frontend is built with
 
 - Python 3.10+
 - Node.js 18+
-- Access to an OLAP cube via ADOMD (set `ADOMD_CONNECTION` environment variable)
+- Access to an OLAP cube via ADOMD. Create a `.env` file inside `backend` with the variable `ADOMD_CONNECTION` set to your connection string (see `backend/.env.example`).
 
 ## Running the backend
 
@@ -45,16 +45,16 @@ creating configurable charts. Saved reports can be loaded and refreshed.
 ```bash
 cd backend
 docker build -t cube-backend .
-docker run -p 8000:8000 -e ADOMD_CONNECTION="<connection>" cube-backend
+docker run -p 8000:8000 --env-file .env cube-backend
 ```
 
 
 ## Running the backend with Docker Compose
 
-Set the `ADOMD_CONNECTION` environment variable and run:
+Ensure the `.env` file exists and run:
 
 ```bash
-ADOMD_CONNECTION="<connection>" docker compose up --build
+docker compose up --build
 ```
 
 The backend will be available at `http://localhost:8000`.
