@@ -11,14 +11,25 @@ interface QueryResult {
   data: Record<string, any>[];
 }
 
+interface CubeFields {
+  dimensions: string[];
+  measures: string[];
+}
+
 const App: React.FC = () => {
   const [mdx, setMdx] = useState('');
   const [result, setResult] = useState<QueryResult | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
+  const [fields, setFields] = useState<CubeFields | null>(null);
 
   const fetchReports = async () => {
     const { data } = await axios.get<Report[]>('/reports');
     setReports(data);
+  };
+
+  const fetchFields = async () => {
+    const { data } = await axios.get<CubeFields>('/fields');
+    setFields(data);
   };
 
   const runQuery = async () => {
@@ -34,11 +45,35 @@ const App: React.FC = () => {
 
   useEffect(() => {
     fetchReports();
+    fetchFields();
   }, []);
 
   return (
     <div>
       <h1>Cube Visual</h1>
+      {fields && (
+        <div>
+          <h2>Available Fields</h2>
+          <div style={{ display: 'flex', gap: '2rem' }}>
+            <div>
+              <h3>Dimensions</h3>
+              <ul>
+                {fields.dimensions.map(d => (
+                  <li key={d}>{d}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3>Measures</h3>
+              <ul>
+                {fields.measures.map(m => (
+                  <li key={m}>{m}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
       <textarea value={mdx} onChange={e => setMdx(e.target.value)} rows={4} cols={80} />
       <div>
         <button onClick={runQuery}>Run Query</button>
