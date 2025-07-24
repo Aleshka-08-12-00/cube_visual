@@ -6,7 +6,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/query': 'http://localhost:8000',
-      '/reports': 'http://localhost:8000'
+      '/reports': 'http://localhost:8000',
+      '/fields': 'http://localhost:8000'
     }
   }
 });
