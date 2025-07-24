@@ -40,3 +40,11 @@ The frontend will be available at `http://localhost:5173` (Vite default). It
 allows selecting cube fields, building tables with Excel‑like filters, and
 creating configurable charts. Saved reports can be loaded and refreshed.
 
+## Running the backend with Docker
+
+```bash
+cd backend
+docker build -t cube-backend .
+docker run -p 8000:8000 -e ADOMD_CONNECTION="<connection>" cube-backend
+```
+
