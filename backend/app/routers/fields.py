@@ -2,16 +2,16 @@ from fastapi import APIRouter, HTTPException
 from ..config import settings
 
 try:
-    from pyadomd import Pyadomd
+    import pyodbc
 except Exception:
-    Pyadomd = None
+    pyodbc = None
 
 router = APIRouter(prefix="/fields", tags=["fields"])
 
 @router.get("")
 def list_fields():
-    if Pyadomd is None:
-        # Fallback with empty lists when pyadomd is not available
+    if pyodbc is None:
+        # Fallback with empty lists when pyodbc is not available
         return {"dimensions": [], "measures": []}
 
     conn_str = settings.adomd_connection
@@ -19,13 +19,15 @@ def list_fields():
         raise HTTPException(status_code=500, detail="ADOMD_CONNECTION not configured")
 
     try:
-        with Pyadomd(conn_str) as conn:
+        with pyodbc.connect(conn_str) as conn:
+            cur = conn.cursor()
             # List dimensions
-            with conn.cursor().execute("SELECT DIMENSION_NAME FROM $system.MDSCHEMA_DIMENSIONS") as cur:
-                dimensions = [row[0] for row in cur.fetchall()]
+            cur.execute("SELECT DIMENSION_NAME FROM $system.MDSCHEMA_DIMENSIONS")
+            dimensions = [row[0] for row in cur.fetchall()]
             # List measures
-            with conn.cursor().execute("SELECT MEASURE_NAME FROM $system.MDSCHEMA_MEASURES") as cur:
-                measures = [row[0] for row in cur.fetchall()]
+            cur.execute("SELECT MEASURE_NAME FROM $system.MDSCHEMA_MEASURES")
+            measures = [row[0] for row in cur.fetchall()]
+            cur.close()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
