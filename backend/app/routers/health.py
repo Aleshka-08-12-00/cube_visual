@@ -1,10 +1,15 @@
 from fastapi import APIRouter, HTTPException
 from ..config import settings
+import os
 
 try:
-    from olap.xmla.xmla import XMLAProvider
-except Exception:
-    XMLAProvider = None
+    import clr  # type: ignore
+    from System.Reflection import Assembly  # type: ignore
+    from pyadomd import Pyadomd  # type: ignore
+except Exception:  # pragma: no cover - import errors
+    clr = None
+    Assembly = None
+    Pyadomd = None
 
 router = APIRouter(prefix="/health", tags=["health"])
 
@@ -12,20 +17,21 @@ router = APIRouter(prefix="/health", tags=["health"])
 @router.get("")
 def health_check():
     """Simple health check ensuring connection to the cube works."""
-    if XMLAProvider is None:
-        raise HTTPException(status_code=500, detail="xmla library not installed")
+    if Pyadomd is None or clr is None:
+        raise HTTPException(status_code=500, detail="pyadomd library not installed")
 
-    if not settings.xmla_url:
-        raise HTTPException(status_code=500, detail="XMLA_URL not configured")
+    if not settings.adomd_conn_str:
+        raise HTTPException(status_code=500, detail="ADOMD_CONN_STR not configured")
 
     try:
-        provider = XMLAProvider()
-        conn = provider.connect(
-            location=settings.xmla_url,
-            username=settings.xmla_username or None,
-            password=settings.xmla_password or None,
-        )
-        conn.getDBSchemaCatalogs()
+        if settings.adomd_dll_path:
+            os.add_dll_directory(os.path.dirname(settings.adomd_dll_path))
+            Assembly.LoadFrom(settings.adomd_dll_path)
+
+        with Pyadomd(settings.adomd_conn_str) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT CATALOG_NAME FROM $SYSTEM.MDSCHEMA_CUBES")
+                cur.fetchone()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Connection failed: {e}")
     return {"status": "ok"}

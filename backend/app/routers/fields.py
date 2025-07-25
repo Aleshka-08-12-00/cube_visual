@@ -1,32 +1,40 @@
 from fastapi import APIRouter, HTTPException
 from ..config import settings
+import os
 
 try:
-    from olap.xmla.xmla import XMLAProvider
-except Exception:
-    XMLAProvider = None
+    import clr  # type: ignore
+    from System.Reflection import Assembly  # type: ignore
+    from pyadomd import Pyadomd  # type: ignore
+except Exception:  # pragma: no cover - import errors
+    clr = None
+    Assembly = None
+    Pyadomd = None
 
 router = APIRouter(prefix="/fields", tags=["fields"])
 
 @router.get("")
 def list_fields():
-    if XMLAProvider is None:
+    if Pyadomd is None or clr is None:
         return {"dimensions": [], "measures": []}
 
-    if not settings.xmla_url:
-        raise HTTPException(status_code=500, detail="XMLA_URL not configured")
+    if not settings.adomd_conn_str:
+        raise HTTPException(status_code=500, detail="ADOMD_CONN_STR not configured")
 
     try:
-        provider = XMLAProvider()
-        conn = provider.connect(
-            location=settings.xmla_url,
-            username=settings.xmla_username or None,
-            password=settings.xmla_password or None,
-        )
-        dims = conn.getMDSchemaDimensions(Catalog=settings.xmla_catalog or None)
-        dimensions = [d.DIMENSION_NAME for d in dims]
-        meas = conn.getMDSchemaMeasures(Catalog=settings.xmla_catalog or None)
-        measures = [m.MEASURE_NAME for m in meas]
+        if settings.adomd_dll_path:
+            os.add_dll_directory(os.path.dirname(settings.adomd_dll_path))
+            Assembly.LoadFrom(settings.adomd_dll_path)
+
+        with Pyadomd(settings.adomd_conn_str) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT DIMENSION_NAME FROM $SYSTEM.MDSCHEMA_DIMENSIONS")
+                dimensions = [row[0] for row in cur.fetchall()]
+
+        with Pyadomd(settings.adomd_conn_str) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT MEASURE_NAME FROM $SYSTEM.MDSCHEMA_MEASURES")
+                measures = [row[0] for row in cur.fetchall()]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
