@@ -2,32 +2,31 @@ from fastapi import APIRouter, HTTPException
 from ..config import settings
 
 try:
-    from pyadomd import Pyadomd
+    from olap.xmla.xmla import XMLAProvider
 except Exception:
-    Pyadomd = None
+    XMLAProvider = None
 
 router = APIRouter(prefix="/fields", tags=["fields"])
 
 @router.get("")
 def list_fields():
-    if Pyadomd is None:
-        # Fallback with empty lists when pyadomd is not available
+    if XMLAProvider is None:
         return {"dimensions": [], "measures": []}
 
-    conn_str = settings.adomd_connection
-    if not conn_str:
-        raise HTTPException(status_code=500, detail="ADOMD_CONNECTION not configured")
+    if not settings.xmla_url:
+        raise HTTPException(status_code=500, detail="XMLA_URL not configured")
 
     try:
-        with Pyadomd(conn_str) as conn:
-            cur = conn.cursor()
-            # List dimensions
-            cur.execute("SELECT DIMENSION_NAME FROM $system.MDSCHEMA_DIMENSIONS")
-            dimensions = [row[0] for row in cur.fetchall()]
-            # List measures
-            cur.execute("SELECT MEASURE_NAME FROM $system.MDSCHEMA_MEASURES")
-            measures = [row[0] for row in cur.fetchall()]
-            cur.close()
+        provider = XMLAProvider()
+        conn = provider.connect(
+            location=settings.xmla_url,
+            username=settings.xmla_username or None,
+            password=settings.xmla_password or None,
+        )
+        dims = conn.getMDSchemaDimensions(Catalog=settings.xmla_catalog or None)
+        dimensions = [d.DIMENSION_NAME for d in dims]
+        meas = conn.getMDSchemaMeasures(Catalog=settings.xmla_catalog or None)
+        measures = [m.MEASURE_NAME for m in meas]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

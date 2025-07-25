@@ -2,9 +2,9 @@ from fastapi import APIRouter, HTTPException
 from ..config import settings
 
 try:
-    from pyadomd import Pyadomd
+    from olap.xmla.xmla import XMLAProvider
 except Exception:
-    Pyadomd = None
+    XMLAProvider = None
 
 router = APIRouter(prefix="/health", tags=["health"])
 
@@ -12,17 +12,20 @@ router = APIRouter(prefix="/health", tags=["health"])
 @router.get("")
 def health_check():
     """Simple health check ensuring connection to the cube works."""
-    if Pyadomd is None:
-        raise HTTPException(status_code=500, detail="pyadomd not installed")
-    conn_str = settings.adomd_connection
-    if not conn_str:
-        raise HTTPException(status_code=500, detail="ADOMD_CONNECTION not configured")
+    if XMLAProvider is None:
+        raise HTTPException(status_code=500, detail="xmla library not installed")
+
+    if not settings.xmla_url:
+        raise HTTPException(status_code=500, detail="XMLA_URL not configured")
+
     try:
-        with Pyadomd(conn_str) as conn:
-            cur = conn.cursor()
-            cur.execute("SELECT TABLE_CATALOG FROM $system.dbschema_catalogs")
-            cur.fetchone()
-            cur.close()
+        provider = XMLAProvider()
+        conn = provider.connect(
+            location=settings.xmla_url,
+            username=settings.xmla_username or None,
+            password=settings.xmla_password or None,
+        )
+        conn.getDBSchemaCatalogs()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Connection failed: {e}")
     return {"status": "ok"}
