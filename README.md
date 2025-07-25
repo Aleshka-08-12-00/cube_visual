@@ -59,3 +59,16 @@ docker compose up --build
 ```
 
 The backend will be available at `http://localhost:8000`.
+
+## Running tests
+
+Unit tests are located in the `tests` directory and use **pytest**. After
+installing the backend dependencies simply run:
+
+```bash
+pip install -r backend/requirements.txt
+pytest
+```
+
+The tests mock the cube connection, so they run without requiring access to an
+actual OLAP server.
