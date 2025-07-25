@@ -5,7 +5,5 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - XMLA_URL=${XMLA_URL}
-      - XMLA_USERNAME=${XMLA_USERNAME}
-      - XMLA_PASSWORD=${XMLA_PASSWORD}
-      - XMLA_CATALOG=${XMLA_CATALOG}
+      - ADOMD_DLL_PATH=${ADOMD_DLL_PATH}
+      - ADOMD_CONN_STR=${ADOMD_CONN_STR}

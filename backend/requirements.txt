@@ -6,5 +6,6 @@ python-dotenv
 xmla @ git+https://github.com/may-day/olap.git#subdirectory=xmla
 
 pythonnet
+pyadomd
 pytest
 httpx
