@@ -2,14 +2,16 @@
 
 This project provides a simple web interface to query an OLAP cube and visualize
 results in a spreadsheet‑like interface. The backend is built with **FastAPI**
-and uses **pyadomd** to query the cube. The frontend is built with
+and uses the **xmla** library to query the cube. The frontend is built with
 **React** and **TypeScript**.
 
 ## Requirements
 
 - Python 3.10+
 - Node.js 18+
-- Access to an OLAP cube. Create a `.env` file inside `backend` with the variable `ADOMD_CONNECTION` set to your connection string (see `backend/.env.example`).
+- Access to an OLAP cube. Create a `.env` file inside `backend` with connection
+  details for your cube (see `backend/.env.example`). The main settings are
+  `XMLA_URL`, `XMLA_USERNAME`, `XMLA_PASSWORD` and optionally `XMLA_CATALOG`.
 
 ## Running the backend
 
