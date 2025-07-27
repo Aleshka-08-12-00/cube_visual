@@ -1,9 +1,12 @@
 FROM python:3.11-slim
 
-# Install git for dependencies fetched from version control
+# Install git (for dependencies fetched from VCS) and the .NET runtime
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git \
+    && apt-get install -y --no-install-recommends git dotnet-runtime-8.0 \
     && rm -rf /var/lib/apt/lists/*
+
+# Use .NET (CoreCLR) with pythonnet
+ENV PYTHONNET_RUNTIME=coreclr
 
 WORKDIR /app
 
