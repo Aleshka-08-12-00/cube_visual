@@ -46,8 +46,11 @@ class DummyPyadomd:
 def test_health_success(monkeypatch):
     monkeypatch.setattr(connection, "Pyadomd", DummyPyadomd)
     monkeypatch.setattr(connection, "clr", object())
+    monkeypatch.setattr(connection.os, "add_dll_directory", lambda p: None, raising=False)
+    monkeypatch.setattr(connection, "Assembly", type("A", (), {"LoadFrom": lambda self, p: None})())
     monkeypatch.setattr(connection.settings, "adomd_conn_str", "cs")
     monkeypatch.setattr(connection.settings, "adomd_dll_path", "")
+    monkeypatch.setattr(connection, "DLL_PATH", "dummy.dll")
     connection._conn = None
     client = TestClient(app)
     resp = client.get("/health")
