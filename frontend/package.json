@@ -1,22 +1,30 @@
 {
-  "name": "cube-visual-frontend",
-  "version": "0.1.0",
+  "name": "olap-explorer-frontend",
+  "version": "0.0.1",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview --port 5174"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "axios": "^1.6.7"
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/material": "^6.1.2",
+    "@mui/x-data-grid": "^7.20.0",
+    "axios": "^1.7.7",
+    "plotly.js-basic-dist": "^2.35.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-pivottable": "^0.12.0",
+    "recharts": "^2.12.7"
   },
   "devDependencies": {
-    "@types/react": "^18.2.15",
-    "@types/react-dom": "^18.2.7",
-    "@vitejs/plugin-react": "^4.0.3",
-    "typescript": "^5.4.2",
-    "vite": "^4.4.9"
+    "@types/react": "^18.3.10",
+    "@types/react-dom": "^18.3.0",
+    "@types/react-pivottable": "^0.11.6",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.3"
   }
 }

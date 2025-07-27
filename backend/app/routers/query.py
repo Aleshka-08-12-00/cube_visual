@@ -1,19 +1,26 @@
-from fastapi import APIRouter, HTTPException
-from ..schemas import QueryRequest, QueryResponse
-from ..connection import open_connection
+from fastapi import APIRouter
+from pydantic import BaseModel, Field
+from typing import List, Optional, Any
+from ..adomd import fetch
+from ..mdx_builder import build_mdx
 
 router = APIRouter(prefix="/query", tags=["query"])
 
+class RunRequest(BaseModel):
+    mdx: Optional[str] = None
+    cube: Optional[str] = None
+    measures: List[str] = Field(default_factory=list)
+    rows: List[str] = Field(default_factory=list)
+    columns: List[str] = Field(default_factory=list)
+    slicers: List[str] = Field(default_factory=list)
 
-@router.post("", response_model=QueryResponse)
-def run_query(req: QueryRequest):
-    try:
-        conn = open_connection()
-        with conn.cursor() as cur:
-            cur.execute(req.mdx)
-            columns = [d[0] for d in cur.description]
-            rows = cur.fetchall()
-        data = [dict(zip(columns, r)) for r in rows]
-        return QueryResponse(columns=columns, data=data)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@router.post("/run")
+def run(req: RunRequest):
+    mdx = req.mdx or build_mdx(req.cube or "", req.measures, req.rows, req.columns, req.slicers)
+    cols, rows = fetch(mdx)
+    return {"mdx": mdx, "columns": cols, "rows": rows}
+
+@router.get("/health")
+def health():
+    cols, rows = fetch("SELECT TABLE_CATALOG FROM $SYSTEM.DBSCHEMA_CATALOGS")
+    return {"status": "ok"}
