@@ -19,10 +19,10 @@ def main() -> None:
         raise SystemExit("CUBE_NAME environment variable not set")
 
     sql = SQL.format(cube=cube)
-    with open_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(sql)
-            measures = [row[0] for row in cur.fetchall()]
+    conn = open_connection()
+    with conn.cursor() as cur:
+        cur.execute(sql)
+        measures = [row[0] for row in cur.fetchall()]
 
     for m in measures:
         print(m)

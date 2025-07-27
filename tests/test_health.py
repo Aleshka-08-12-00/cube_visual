@@ -33,11 +33,14 @@ class DummyPyadomd:
     def __init__(self, conn_str):
         self.conn_str = conn_str
 
-    def __enter__(self):
-        return DummyConn()
-
-    def __exit__(self, exc_type, exc, tb):
+    def open(self):
         pass
+
+    def close(self):
+        pass
+
+    def cursor(self):
+        return DummyCursor()
 
 
 def test_health_success(monkeypatch):
@@ -45,6 +48,7 @@ def test_health_success(monkeypatch):
     monkeypatch.setattr(connection, "clr", object())
     monkeypatch.setattr(connection.settings, "adomd_conn_str", "cs")
     monkeypatch.setattr(connection.settings, "adomd_dll_path", "")
+    connection._conn = None
     client = TestClient(app)
     resp = client.get("/health")
     assert resp.status_code == 200
@@ -53,6 +57,7 @@ def test_health_success(monkeypatch):
 
 def test_health_no_provider(monkeypatch):
     monkeypatch.setattr(connection, "Pyadomd", None)
+    connection._conn = None
     client = TestClient(app)
     resp = client.get("/health")
     assert resp.status_code == 500

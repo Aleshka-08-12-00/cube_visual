@@ -8,11 +8,11 @@ router = APIRouter(prefix="/query", tags=["query"])
 @router.post("", response_model=QueryResponse)
 def run_query(req: QueryRequest):
     try:
-        with open_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(req.mdx)
-                columns = [d[0] for d in cur.description]
-                rows = cur.fetchall()
+        conn = open_connection()
+        with conn.cursor() as cur:
+            cur.execute(req.mdx)
+            columns = [d[0] for d in cur.description]
+            rows = cur.fetchall()
         data = [dict(zip(columns, r)) for r in rows]
         return QueryResponse(columns=columns, data=data)
     except Exception as e:
