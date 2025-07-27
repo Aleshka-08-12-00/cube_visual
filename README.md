@@ -9,6 +9,10 @@ and uses **pyadomd** (ADOMD.NET) to query the cube. The frontend is built with
 
 - Python 3.10+
 - Node.js 18+
+- A .NET runtime. The Docker image installs `dotnet-runtime-8.0` and sets
+  `PYTHONNET_RUNTIME=coreclr`. When running directly on Windows install
+  [.NET 8](https://dotnet.microsoft.com/download) and set the same environment
+  variable so pythonnet loads the CoreCLR runtime.
 - Access to an OLAP cube. Create a `.env` file inside `backend` with connection
   details for your cube (see `backend/.env.example`). The main settings are
   `ADOMD_DLL_PATH` and `ADOMD_CONN_STR`.
