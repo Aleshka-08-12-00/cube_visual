@@ -1,9 +1,0 @@
-version: "3.9"
-services:
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
-    environment:
-      - ADOMD_DLL_PATH=${ADOMD_DLL_PATH}
-      - ADOMD_CONN_STR=${ADOMD_CONN_STR}

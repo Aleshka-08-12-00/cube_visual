@@ -1,11 +1,6 @@
-fastapi
-uvicorn
-pydantic
-pydantic-settings
-python-dotenv
-xmla @ git+https://github.com/may-day/olap.git#subdirectory=xmla
-
-pythonnet
-pyadomd
-pytest
-httpx
+fastapi==0.115.5
+uvicorn[standard]==0.30.6
+pyadomd==0.1.0
+pythonnet==3.0.3
+pydantic==2.9.2
+pydantic-settings==2.6.1
