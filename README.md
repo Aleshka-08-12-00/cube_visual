@@ -37,7 +37,11 @@ Build and start the backend using Docker Compose:
 docker compose up --build
 ```
 
-The backend will be available at `http://localhost:8000`. Endpoints:
+The backend will be available at `http://localhost:8000`. On startup the
+application opens a single connection to the cube using the same settings as in
+the manual example. Endpoints reuse this connection.
+
+Endpoints:
 
 - `POST /query` – run an MDX query ({"mdx": "..."})
 - `GET /fields` – list available cube dimensions and measures
@@ -96,3 +100,10 @@ Use the helper script to print all measures from a cube. Set `CUBE_NAME` and con
 ```bash
 CUBE_NAME=NextGen python -m backend.app.list_measures
 ```
+
+## Example: manual connection
+
+For a minimal example mirroring the basic ADOMD.NET setup, see
+`backend/app/examples/manual_connection.py`. It shows how to load the
+`Microsoft.AnalysisServices.AdomdClient.dll` assembly, create a connection with
+`Pyadomd`, and execute a query against the cube.
