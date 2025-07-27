@@ -18,6 +18,14 @@ CONN_STR = (
     "Integrated Security=SSPI;"
 )
 
+# Default DLL path matching the manual example
+DLL_PATH = r"C:\\Program Files\\Microsoft.NET\\ADOMD.NET\\110\\Microsoft.AnalysisServices.AdomdClient.dll"
+
+
+def get_dll_path() -> str:
+    """Return configured DLL path or the default example."""
+    return settings.adomd_dll_path or DLL_PATH
+
 def get_conn_str() -> str:
     """Return configured connection string or the default example."""
     return settings.adomd_conn_str or CONN_STR
@@ -35,9 +43,10 @@ def open_connection():
     if _conn is not None:
         return _conn
 
-    if settings.adomd_dll_path:
-        os.add_dll_directory(os.path.dirname(settings.adomd_dll_path))
-        Assembly.LoadFrom(settings.adomd_dll_path)
+    dll_path = get_dll_path()
+    if dll_path:
+        os.add_dll_directory(os.path.dirname(dll_path))
+        Assembly.LoadFrom(dll_path)
 
     _conn = Pyadomd(get_conn_str())
     _conn.open()

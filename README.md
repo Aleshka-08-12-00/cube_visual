@@ -15,8 +15,8 @@ and uses **pyadomd** (ADOMD.NET) to query the cube. The frontend is built with
   variable so pythonnet loads the CoreCLR runtime.
 - Access to an OLAP cube. Create a `.env` file inside `backend` with connection
   details for your cube (see `backend/.env.example`). The main settings are
-  `ADOMD_DLL_PATH` and `ADOMD_CONN_STR`. If `ADOMD_CONN_STR` is not provided the
-  example connection string
+  `ADOMD_DLL_PATH` and `ADOMD_CONN_STR`. If these variables are not provided the
+  example DLL path and connection string
 
   ```python
   conn_str = (
@@ -27,7 +27,7 @@ and uses **pyadomd** (ADOMD.NET) to query the cube. The frontend is built with
   )
   ```
 
-  will be used.
+  will be used by default.
 
 ## Running the backend
 
