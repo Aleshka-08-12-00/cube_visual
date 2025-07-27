@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from backend.app.main import app
+from backend.app import connection
 from backend.app.routers import health
 
 
@@ -40,9 +41,10 @@ class DummyPyadomd:
 
 
 def test_health_success(monkeypatch):
-    monkeypatch.setattr(health, "Pyadomd", DummyPyadomd)
-    monkeypatch.setattr(health, "clr", object())
-    monkeypatch.setattr(health.settings, "adomd_conn_str", "cs")
+    monkeypatch.setattr(connection, "Pyadomd", DummyPyadomd)
+    monkeypatch.setattr(connection, "clr", object())
+    monkeypatch.setattr(connection.settings, "adomd_conn_str", "cs")
+    monkeypatch.setattr(connection.settings, "adomd_dll_path", "")
     client = TestClient(app)
     resp = client.get("/health")
     assert resp.status_code == 200
@@ -50,7 +52,7 @@ def test_health_success(monkeypatch):
 
 
 def test_health_no_provider(monkeypatch):
-    monkeypatch.setattr(health, "Pyadomd", None)
+    monkeypatch.setattr(connection, "Pyadomd", None)
     client = TestClient(app)
     resp = client.get("/health")
     assert resp.status_code == 500
