@@ -17,30 +17,46 @@ def measures(cube: str = Query(...)):
 
 @router.get("/dimensions")
 def dimensions(cube: str = Query(...)):
-    # DIMENSION_UNIQUE_NAME is not available in MDSCHEMA_DIMENSIONS on some
-    # servers which results in a syntax error when querying this rowset.
-    # Instead, fetch distinct dimension information from the hierarchies
-    # rowset which always exposes the unique name.
-    q = (
-        f"SELECT DIMENSION_NAME, DIMENSION_UNIQUE_NAME "
+    cube_escaped = cube.replace("'", "''")
+    q_h = (
+        f"SELECT [DIMENSION_UNIQUE_NAME] "
         f"FROM $SYSTEM.MDSCHEMA_HIERARCHIES "
-        f"WHERE CUBE_NAME='{cube}' AND HIERARCHY_IS_VISIBLE=1 "
-        f"ORDER BY DIMENSION_NAME"
+        f"WHERE [CUBE_NAME]='{cube_escaped}' "
+        f"AND [HIERARCHY_IS_VISIBLE] "
+        f"AND [DIMENSION_UNIQUE_NAME] <> '[Measures]' "
+        f"ORDER BY [DIMENSION_UNIQUE_NAME]"
     )
-    cols, rows = fetch_limited(q, 0)
-    seen: set[str] = set()
+    _, rows_h = fetch_limited(q_h, 0)
+    uniques = {r[0] for r in rows_h}
+
+    q_d = (
+        f"SELECT [DIMENSION_UNIQUE_NAME],[DIMENSION_NAME],[DIMENSION_CAPTION],[DIMENSION_IS_VISIBLE] "
+        f"FROM $SYSTEM.MDSCHEMA_DIMENSIONS "
+        f"WHERE [CUBE_NAME]='{cube_escaped}'"
+    )
+    _, rows_d = fetch_limited(q_d, 0)
+    meta = {r[0]: {"name": r[1], "caption": r[2], "visible": bool(r[3])} for r in rows_d}
+
     dims = []
-    for r in rows:
-        unique_name = r[1]
-        if unique_name not in seen:
-            seen.add(unique_name)
-            dims.append({"dimension_name": r[0], "dimension_unique_name": unique_name})
+    for u in sorted(uniques):
+        m = meta.get(u, {})
+        name = m.get("name") or m.get("caption") or u
+        dims.append({"dimension_name": name, "dimension_unique_name": u})
     return dims
 
 @router.get("/hierarchies")
 def hierarchies(cube: str = Query(...), dimension_unique_name: str | None = None):
-    where = f"AND DIMENSION_UNIQUE_NAME='{dimension_unique_name}'" if dimension_unique_name else ""
-    q = f"SELECT HIERARCHY_NAME, HIERARCHY_UNIQUE_NAME, DIMENSION_UNIQUE_NAME FROM $SYSTEM.MDSCHEMA_HIERARCHIES WHERE CUBE_NAME='{cube}' AND HIERARCHY_IS_VISIBLE=1 {where} ORDER BY HIERARCHY_NAME"
+    cube_escaped = cube.replace("'", "''")
+    where = ""
+    if dimension_unique_name:
+        dim_escaped = dimension_unique_name.replace("'", "''")
+        where = f" AND [DIMENSION_UNIQUE_NAME]='{dim_escaped}'"
+    q = (
+        "SELECT [HIERARCHY_NAME],[HIERARCHY_UNIQUE_NAME],[DIMENSION_UNIQUE_NAME] "
+        "FROM $SYSTEM.MDSCHEMA_HIERARCHIES "
+        f"WHERE [CUBE_NAME]='{cube_escaped}' AND [HIERARCHY_IS_VISIBLE]{where} "
+        "ORDER BY [HIERARCHY_NAME]"
+    )
     cols, rows = fetch_limited(q, 0)
     return [{"hierarchy_name": r[0], "hierarchy_unique_name": r[1], "dimension_unique_name": r[2]} for r in rows]
 
