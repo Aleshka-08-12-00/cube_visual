@@ -19,14 +19,25 @@ def measures(cube: str = Query(...)):
 def dimensions(cube: str = Query(...)):
     cube_escaped = cube.replace("'", "''")
     q_h = (
-        f"SELECT [DIMENSION_UNIQUE_NAME] "
+        f"SELECT [DIMENSION_NAME],[DIMENSION_UNIQUE_NAME] "
         f"FROM $SYSTEM.MDSCHEMA_HIERARCHIES "
         f"WHERE [CUBE_NAME]='{cube_escaped}' "
         f"AND [HIERARCHY_IS_VISIBLE] "
         f"AND [DIMENSION_UNIQUE_NAME] <> '[Measures]' "
-        f"ORDER BY [DIMENSION_UNIQUE_NAME]"
+        f"ORDER BY [DIMENSION_NAME]"
     )
     _, rows_h = fetch_limited(q_h, 0)
+
+    # If the hierarchies rowset already returns dimension names, use them
+    if rows_h and len(rows_h[0]) > 1:
+        seen: set[str] = set()
+        dims = []
+        for name, unique in rows_h:
+            if unique not in seen:
+                seen.add(unique)
+                dims.append({"dimension_name": name, "dimension_unique_name": unique})
+        return dims
+
     uniques = {r[0] for r in rows_h}
 
     q_d = (

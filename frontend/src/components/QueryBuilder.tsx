@@ -6,6 +6,8 @@ import MeasureSelector from './MeasureSelector'
 import DimensionTree from './DimensionTree'
 
 type Props = { onResult: (r: QueryRunResponse) => void }
+const DEFAULT_MDX = 'SELECT TABLE_CATALOG FROM $SYSTEM.DBSCHEMA_CATALOGS'
+
 export default function QueryBuilder({ onResult }: Props) {
   const [cubes, setCubes] = useState<Cube[]>([])
   const [cube, setCube] = useState('')
@@ -13,7 +15,7 @@ export default function QueryBuilder({ onResult }: Props) {
   const [selMeasures, setSelMeasures] = useState<string[]>([])
   const [rowHierarchies, setRowHierarchies] = useState<string[]>([])
   const [colHierarchies, setColHierarchies] = useState<string[]>([])
-  const [mdx, setMdx] = useState('')
+  const [mdx, setMdx] = useState(DEFAULT_MDX)
   const canRun = useMemo(() => mdx.trim().length > 0 || (cube && selMeasures.length > 0), [mdx, cube, selMeasures])
 
   useEffect(() => {
@@ -21,6 +23,12 @@ export default function QueryBuilder({ onResult }: Props) {
       setCubes(r.data)
       if (r.data.length) setCube(r.data[0].cube_name)
     })
+  }, [])
+
+  useEffect(() => {
+    // Run the default query once on mount so users immediately see results
+    buildAndRun()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
