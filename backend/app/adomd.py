@@ -1,6 +1,7 @@
 import os
 import sys
 from typing import Any, Dict, List, Tuple
+from decimal import Decimal
 from .config import settings
 
 def _ensure_dll():
@@ -17,7 +18,16 @@ def fetch(query: str) -> Tuple[List[str], List[List[Any]]]:
         with conn.cursor() as cur:
             cur.execute(query)
             cols = [d[0] for d in cur.description] if cur.description else []
-            rows = [list(r) for r in cur.fetchall()]
+            rows = []
+            for record in cur.fetchall():
+                row = []
+                for value in record:
+                    if isinstance(value, Decimal):
+                        # Convert Decimals to float for JSON serialization
+                        row.append(float(value))
+                    else:
+                        row.append(value)
+                rows.append(row)
             return cols, rows
 
 def fetch_limited(query: str, limit: int) -> Tuple[List[str], List[List[Any]]]:
