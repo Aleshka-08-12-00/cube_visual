@@ -17,9 +17,25 @@ def measures(cube: str = Query(...)):
 
 @router.get("/dimensions")
 def dimensions(cube: str = Query(...)):
-    q = f"SELECT DIMENSION_NAME, DIMENSION_UNIQUE_NAME FROM $SYSTEM.MDSCHEMA_DIMENSIONS WHERE CUBE_NAME='{cube}' AND DIMENSION_IS_VISIBLE=1 ORDER BY DIMENSION_NAME"
+    # DIMENSION_UNIQUE_NAME is not available in MDSCHEMA_DIMENSIONS on some
+    # servers which results in a syntax error when querying this rowset.
+    # Instead, fetch distinct dimension information from the hierarchies
+    # rowset which always exposes the unique name.
+    q = (
+        f"SELECT DIMENSION_NAME, DIMENSION_UNIQUE_NAME "
+        f"FROM $SYSTEM.MDSCHEMA_HIERARCHIES "
+        f"WHERE CUBE_NAME='{cube}' AND HIERARCHY_IS_VISIBLE=1 "
+        f"ORDER BY DIMENSION_NAME"
+    )
     cols, rows = fetch_limited(q, 0)
-    return [{"dimension_name": r[0], "dimension_unique_name": r[1]} for r in rows]
+    seen: set[str] = set()
+    dims = []
+    for r in rows:
+        unique_name = r[1]
+        if unique_name not in seen:
+            seen.add(unique_name)
+            dims.append({"dimension_name": r[0], "dimension_unique_name": unique_name})
+    return dims
 
 @router.get("/hierarchies")
 def hierarchies(cube: str = Query(...), dimension_unique_name: str | None = None):
