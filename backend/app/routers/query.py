@@ -16,24 +16,36 @@ def _to_float(v: Any) -> float | None:
 
 
 def _strip_total_row(columns: List[str], rows: List[List[Any]]) -> List[List[Any]]:
-    """Remove the first row if it represents the grand total."""
+    """Remove leading or trailing grand total row if present."""
     if len(rows) <= 1 or len(columns) <= 1:
         return rows
+
     num_cols = len(columns) - 1
-    sums = [0.0] * num_cols
-    for r in rows[1:]:
+
+    # Convert all numeric values to ``float`` and compute column totals.
+    converted: list[list[float]] = []
+    totals = [0.0] * num_cols
+    for r in rows:
         if len(r) < len(columns):
             return rows
+        vals = []
         for i in range(num_cols):
             val = _to_float(r[i + 1])
             if val is None:
                 return rows
-            sums[i] += val
-    first_vals = [_to_float(rows[0][i + 1]) for i in range(num_cols)]
-    if None in first_vals:
-        return rows
-    if all(abs(first_vals[i] - sums[i]) < 1e-6 for i in range(num_cols)):
+            vals.append(val)
+            totals[i] += val
+        converted.append(vals)
+
+    def is_total(idx: int) -> bool:
+        candidate = converted[idx]
+        rest = [totals[i] - candidate[i] for i in range(num_cols)]
+        return all(abs(candidate[i] - rest[i]) < 1e-6 for i in range(num_cols))
+
+    if is_total(0):
         return rows[1:]
+    if is_total(len(rows) - 1):
+        return rows[:-1]
     return rows
 
 DEFAULT_MDX = (
