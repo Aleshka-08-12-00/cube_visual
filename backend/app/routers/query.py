@@ -4,6 +4,13 @@ from typing import List, Optional, Any
 from ..adomd import fetch
 from ..mdx_builder import build_mdx
 
+DEFAULT_MDX = (
+    "SELECT\n"
+    "  NON EMPTY [Концерн].[Концерн].Members ON ROWS,\n"
+    "  { [Measures].[реализация руб] } ON COLUMNS\n"
+    "FROM [NextGen]"
+)
+
 router = APIRouter(prefix="/query", tags=["query"])
 
 class RunRequest(BaseModel):
@@ -16,7 +23,12 @@ class RunRequest(BaseModel):
 
 @router.post("/run")
 def run(req: RunRequest):
-    mdx = req.mdx or build_mdx(req.cube or "", req.measures, req.rows, req.columns, req.slicers)
+    if req.mdx:
+        mdx = req.mdx
+    elif req.cube:
+        mdx = build_mdx(req.cube, req.measures, req.rows, req.columns, req.slicers)
+    else:
+        mdx = DEFAULT_MDX
     cols, rows = fetch(mdx)
     return {"mdx": mdx, "columns": cols, "rows": rows}
 
