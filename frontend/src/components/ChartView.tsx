@@ -3,6 +3,17 @@ import { Box, FormControl, InputLabel, MenuItem, Select, Stack, Typography } fro
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts'
 import { QueryRunResponse } from '../types'
 
+function extractMeasure(mdx: string): string {
+  const match = mdx.match(/\[Measures\]\.\[([^\]]+)\]/)
+  return match ? match[1] : 'value'
+}
+
+function toNumber(v: any): number {
+  if (typeof v === 'number') return v
+  const n = Number(String(v).replace(',', '.'))
+  return isNaN(n) ? 0 : n
+}
+
 type Props = { result: QueryRunResponse | null }
 export default function ChartView({ result }: Props) {
   const [xField, setXField] = useState<string>('')
@@ -23,12 +34,13 @@ export default function ChartView({ result }: Props) {
   const displayResult = useMemo(() => {
     if (!result) return null
     if (result.columns.length <= 2) return result
+    const measure = extractMeasure(result.mdx)
     if (mode === 'row') {
-      const rows = result.rows.map(r => [r[0], r.slice(1).reduce((s, v) => s + Number(v), 0)])
-      return { mdx: result.mdx, columns: [result.columns[0], 'value'], rows }
+      const rows = result.rows.map(r => [r[0], r.slice(1).reduce((s, v) => s + toNumber(v), 0)])
+      return { mdx: result.mdx, columns: [result.columns[0], measure], rows }
     } else {
-      const rows = result.columns.slice(1).map((c, i) => [c, result.rows.reduce((s, r) => s + Number(r[i + 1]), 0)])
-      return { mdx: result.mdx, columns: ['field', 'value'], rows }
+      const rows = result.columns.slice(1).map((c, i) => [c, result.rows.reduce((s, r) => s + toNumber(r[i + 1]), 0)])
+      return { mdx: result.mdx, columns: ['field', measure], rows }
     }
   }, [result, mode])
 

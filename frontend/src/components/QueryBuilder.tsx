@@ -8,18 +8,10 @@ import DimensionTree from './DimensionTree'
 type Props = { onResult: (r: QueryRunResponse) => void }
 
 const EXAMPLE_QUERIES: Record<string, string> = {
-  matrix: `WITH
-SET [Months2024] AS
-  NonEmpty(
-    Descendants(
-      [Время].[Год - Квартал - Месяц - День].&[2024],
-      [Время].[Год - Квартал - Месяц - День].[Месяц]
-    ),
-    { [Measures].[реализация руб] }
-  )
-SELECT
+  matrix: `SELECT
   NON EMPTY
-    [Months2024] * { [Measures].[реализация руб] }
+    [Время].[Год - Квартал - Месяц - День].&[2024].Children
+    * { [Measures].[реализация руб] }
   ON COLUMNS,
   NON EMPTY
     [Товар].[Концерн].Members

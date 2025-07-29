@@ -5,18 +5,10 @@ from ..adomd import fetch
 from ..mdx_builder import build_mdx
 
 DEFAULT_MDX = (
-    "WITH\n"
-    "SET [Months2024] AS\n"
-    "  NonEmpty(\n"
-    "    Descendants(\n"
-    "      [Время].[Год - Квартал - Месяц - День].&[2024],\n"
-    "      [Время].[Год - Квартал - Месяц - День].[Месяц]\n"
-    "    ),\n"
-    "    { [Measures].[реализация руб] }\n"
-    "  )\n"
     "SELECT\n"
     "  NON EMPTY\n"
-    "    [Months2024] * { [Measures].[реализация руб] }\n"
+    "    [Время].[Год - Квартал - Месяц - День].&[2024].Children\n"
+    "    * { [Measures].[реализация руб] }\n"
     "  ON COLUMNS,\n"
     "  NON EMPTY\n"
     "    [Товар].[Концерн].Members\n"
