@@ -6,7 +6,10 @@ import MeasureSelector from './MeasureSelector'
 import DimensionTree from './DimensionTree'
 
 type Props = { onResult: (r: QueryRunResponse) => void }
-const DEFAULT_MDX = 'SELECT TABLE_CATALOG FROM $SYSTEM.DBSCHEMA_CATALOGS'
+const DEFAULT_MDX = `SELECT
+  NON EMPTY [Концерн].[Концерн].Members ON ROWS,
+  { [Measures].[реализация руб] } ON COLUMNS
+FROM [NextGen]`
 
 export default function QueryBuilder({ onResult }: Props) {
   const [cubes, setCubes] = useState<Cube[]>([])
