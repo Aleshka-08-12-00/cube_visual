@@ -1,7 +1,8 @@
 import os
 import sys
-from typing import Any, Dict, List, Tuple
+from typing import Any, List, Tuple
 from decimal import Decimal
+from fastapi.encoders import jsonable_encoder
 from .config import settings
 
 def _ensure_dll():
@@ -22,11 +23,14 @@ def fetch(query: str) -> Tuple[List[str], List[List[Any]]]:
             for record in cur.fetchall():
                 row = []
                 for value in record:
-                    if isinstance(value, Decimal):
-                        # Convert Decimals to float for JSON serialization
-                        row.append(float(value))
-                    else:
-                        row.append(value)
+                    # ``jsonable_encoder`` gracefully handles common data types
+                    # including ``decimal.Decimal`` and .NET ``System.Decimal``.
+                    # Fallback to ``str`` if it cannot encode the value.
+                    try:
+                        encoded = jsonable_encoder(value)
+                    except Exception:
+                        encoded = str(value)
+                    row.append(encoded)
                 rows.append(row)
             return cols, rows
 
