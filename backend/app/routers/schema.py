@@ -30,9 +30,9 @@ def measures(cube: str = Query(...)):
 def dimensions(cube: str = Query(...)):
     cube_escaped = cube.replace("'", "''")
     q_h = f"""
-SELECT DIMENSION_UNIQUE_NAME, HIERARCHY_UNIQUE_NAME, DIMENSION_TYPE, IS_VIRTUAL
+SELECT [DIMENSION_UNIQUE_NAME], [HIERARCHY_UNIQUE_NAME], [DIMENSION_TYPE], [IS_VIRTUAL]
 FROM $SYSTEM.MDSCHEMA_HIERARCHIES
-WHERE CUBE_NAME = '{cube_escaped}'
+WHERE [CUBE_NAME] = '{cube_escaped}'
 """
     cols_h, rows_h = fetch_limited(q_h, 0)
     rows_h = [dict(zip(cols_h, r)) for r in rows_h]
