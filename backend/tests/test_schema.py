@@ -16,17 +16,24 @@ from app.main import app
 
 # We'll monkeypatch fetch_limited to avoid external dependencies
 
+
 @pytest.fixture
 def client():
     return TestClient(app)
 
+
 def test_dimensions_deduplication(monkeypatch, client):
     # Prepare mocked data with duplicate dimension rows
-    sample_cols = ["DIMENSION_NAME", "DIMENSION_UNIQUE_NAME"]
+    sample_cols = [
+        "DIMENSION_NAME",
+        "DIMENSION_UNIQUE_NAME",
+        "DIMENSION_TYPE",
+        "HIERARCHY_IS_VISIBLE",
+    ]
     sample_rows = [
-        ["Sales", "[Sales]"],
-        ["Sales", "[Sales]"],
-        ["Products", "[Products]"]
+        ["Sales", "[Sales]", 1, True],
+        ["Sales", "[Sales]", 1, True],
+        ["Products", "[Products]", 1, True],
     ]
 
     def fake_fetch_limited(query: str, limit: int):
@@ -39,6 +46,5 @@ def test_dimensions_deduplication(monkeypatch, client):
     # Should return only unique dimensions
     assert data == [
         {"dimension_name": "Sales", "dimension_unique_name": "[Sales]"},
-        {"dimension_name": "Products", "dimension_unique_name": "[Products]"}
+        {"dimension_name": "Products", "dimension_unique_name": "[Products]"},
     ]
-
