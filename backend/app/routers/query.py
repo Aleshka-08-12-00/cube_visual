@@ -4,6 +4,38 @@ from typing import List, Optional, Any
 from ..adomd import fetch
 from ..mdx_builder import build_mdx
 
+
+def _to_float(v: Any) -> float | None:
+    """Convert values to ``float`` if possible."""
+    if isinstance(v, (int, float)):
+        return float(v)
+    try:
+        return float(str(v).replace(",", "."))
+    except Exception:
+        return None
+
+
+def _strip_total_row(columns: List[str], rows: List[List[Any]]) -> List[List[Any]]:
+    """Remove the first row if it represents the grand total."""
+    if len(rows) <= 1 or len(columns) <= 1:
+        return rows
+    num_cols = len(columns) - 1
+    sums = [0.0] * num_cols
+    for r in rows[1:]:
+        if len(r) < len(columns):
+            return rows
+        for i in range(num_cols):
+            val = _to_float(r[i + 1])
+            if val is None:
+                return rows
+            sums[i] += val
+    first_vals = [_to_float(rows[0][i + 1]) for i in range(num_cols)]
+    if None in first_vals:
+        return rows
+    if all(abs(first_vals[i] - sums[i]) < 1e-6 for i in range(num_cols)):
+        return rows[1:]
+    return rows
+
 DEFAULT_MDX = (
     "SELECT\n"
     "  NON EMPTY\n"
@@ -35,6 +67,7 @@ def run(req: RunRequest):
     else:
         mdx = DEFAULT_MDX
     cols, rows = fetch(mdx)
+    rows = _strip_total_row(cols, rows)
     return {"mdx": mdx, "columns": cols, "rows": rows}
 
 @router.get("/health")
