@@ -7,6 +7,7 @@ type Props = { result: QueryRunResponse | null }
 export default function ChartView({ result }: Props) {
   const [xField, setXField] = useState<string>('')
   const [yField, setYField] = useState<string>('')
+  const [mode, setMode] = useState<'row' | 'column'>('row')
 
   useEffect(() => {
     if (!result || result.columns.length < 2) {
@@ -14,24 +15,54 @@ export default function ChartView({ result }: Props) {
       setYField('')
       return
     }
+    setMode('row')
     setXField(result.columns[0])
     setYField(result.columns[1])
   }, [result])
 
-  const options = result?.columns || []
+  const displayResult = useMemo(() => {
+    if (!result) return null
+    if (result.columns.length <= 2) return result
+    if (mode === 'row') {
+      const rows = result.rows.map(r => [r[0], r.slice(1).reduce((s, v) => s + Number(v), 0)])
+      return { mdx: result.mdx, columns: [result.columns[0], 'value'], rows }
+    } else {
+      const rows = result.columns.slice(1).map((c, i) => [c, result.rows.reduce((s, r) => s + Number(r[i + 1]), 0)])
+      return { mdx: result.mdx, columns: ['field', 'value'], rows }
+    }
+  }, [result, mode])
+
+  const isMatrix = !!result && result.columns.length > 2
+
+  useEffect(() => {
+    if (!displayResult) return
+    setXField(displayResult.columns[0])
+    setYField(displayResult.columns[1])
+  }, [displayResult])
+
+  const options = displayResult?.columns || []
   const data = useMemo(() => {
-    if (!result) return []
-    return result.rows.map(r => {
+    if (!displayResult) return []
+    return displayResult.rows.map(r => {
       const obj: any = {}
-      result.columns.forEach((c, i) => (obj[c] = r[i]))
+      displayResult.columns.forEach((c, i) => (obj[c] = r[i]))
       return obj
     })
-  }, [result])
+  }, [displayResult])
 
   return (
     <Box>
       <Typography variant="h6" sx={{ mb: 1 }}>График</Typography>
       <Stack direction="row" gap={2} sx={{ mb: 2 }}>
+        {isMatrix && (
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <InputLabel>Агрегация</InputLabel>
+            <Select label="Агрегация" value={mode} onChange={e => setMode(e.target.value as any)}>
+              <MenuItem value="row">По концернам</MenuItem>
+              <MenuItem value="column">По месяцам</MenuItem>
+            </Select>
+          </FormControl>
+        )}
         <FormControl size="small" sx={{ minWidth: 200 }}>
             <InputLabel>X</InputLabel>
             <Select label="X" value={xField} onChange={e => setXField(e.target.value)}>
