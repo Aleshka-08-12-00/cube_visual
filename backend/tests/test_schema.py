@@ -23,21 +23,38 @@ def client():
 
 
 def test_dimensions_deduplication(monkeypatch, client):
-    # Prepare mocked data with duplicate dimension rows
-    sample_cols = [
-        "DIMENSION_NAME",
+    """dimensions endpoint should deduplicate dimension rows."""
+    # Mock data for hierarchies
+    hier_cols = [
         "DIMENSION_UNIQUE_NAME",
+        "HIERARCHY_UNIQUE_NAME",
         "DIMENSION_TYPE",
-        "HIERARCHY_IS_VISIBLE",
+        "IS_VIRTUAL",
     ]
-    sample_rows = [
-        ["Sales", "[Sales]", 1, True],
-        ["Sales", "[Sales]", 1, True],
-        ["Products", "[Products]", 1, True],
+    hier_rows = [
+        ["[Sales]", "[Sales].[H1]", 1, False],
+        ["[Sales]", "[Sales].[H2]", 1, False],
+        ["[Products]", "[Products].[H1]", 1, False],
+    ]
+
+    # Mock data for dimensions metadata
+    dim_cols = [
+        "DIMENSION_UNIQUE_NAME",
+        "DIMENSION_NAME",
+        "DIMENSION_CAPTION",
+        "DIMENSION_IS_VISIBLE",
+    ]
+    dim_rows = [
+        ["[Sales]", "Sales", "Sales", True],
+        ["[Products]", "Products", "Products", True],
     ]
 
     def fake_fetch_limited(query: str, limit: int):
-        return sample_cols, sample_rows
+        if "MDSCHEMA_HIERARCHIES" in query:
+            return hier_cols, hier_rows
+        if "MDSCHEMA_DIMENSIONS" in query:
+            return dim_cols, dim_rows
+        return [], []
 
     monkeypatch.setattr("app.routers.schema.fetch_limited", fake_fetch_limited)
     resp = client.get("/schema/dimensions", params={"cube": "NextGen"})

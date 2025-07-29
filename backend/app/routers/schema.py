@@ -29,32 +29,26 @@ def measures(cube: str = Query(...)):
 @router.get("/dimensions")
 def dimensions(cube: str = Query(...)):
     cube_escaped = cube.replace("'", "''")
-    q_h = (
-        "SELECT [DIMENSION_NAME],[DIMENSION_UNIQUE_NAME],[DIMENSION_TYPE],[HIERARCHY_IS_VISIBLE] "
-        "FROM $SYSTEM.MDSCHEMA_HIERARCHIES "
-        f"WHERE [CUBE_NAME]='{cube_escaped}' "
-        f"ORDER BY [DIMENSION_NAME]"
-    )
+    q_h = f"""
+SELECT DIMENSION_UNIQUE_NAME, HIERARCHY_UNIQUE_NAME, DIMENSION_TYPE, IS_VIRTUAL
+FROM $SYSTEM.MDSCHEMA_HIERARCHIES
+WHERE CUBE_NAME = '{cube_escaped}'
+"""
     cols_h, rows_h = fetch_limited(q_h, 0)
-    vis_idx = cols_h.index("HIERARCHY_IS_VISIBLE")
-    type_idx = cols_h.index("DIMENSION_TYPE")
-    name_idx = cols_h.index("DIMENSION_NAME")
-    uniq_idx = cols_h.index("DIMENSION_UNIQUE_NAME")
+    rows_h = [dict(zip(cols_h, r)) for r in rows_h]
 
-    rows_h = [r for r in rows_h if r[vis_idx] and r[type_idx] != 2]
-    rows_h = [[r[name_idx], r[uniq_idx]] for r in rows_h]
+    # Filter out virtual hierarchies and measure dimensions
+    rows_h = [
+        r for r in rows_h if not r["IS_VIRTUAL"] and r["DIMENSION_TYPE"] != 2
+    ]
 
-    # If the hierarchies rowset already returns dimension names, use them
-    if rows_h and len(rows_h[0]) > 1:
-        seen: set[str] = set()
-        dims = []
-        for name, unique in rows_h:
-            if unique not in seen:
-                seen.add(unique)
-                dims.append({"dimension_name": name, "dimension_unique_name": unique})
-        return dims
-
-    uniques = {r[1] for r in rows_h}
+    uniques = []
+    seen = set()
+    for r in rows_h:
+        u = r["DIMENSION_UNIQUE_NAME"]
+        if u not in seen:
+            seen.add(u)
+            uniques.append(u)
 
     q_d = (
         f"SELECT [DIMENSION_UNIQUE_NAME],[DIMENSION_NAME],[DIMENSION_CAPTION],[DIMENSION_IS_VISIBLE] "
@@ -67,7 +61,7 @@ def dimensions(cube: str = Query(...)):
     }
 
     dims = []
-    for u in sorted(uniques):
+    for u in uniques:
         m = meta.get(u, {})
         name = m.get("name") or m.get("caption") or u
         dims.append({"dimension_name": name, "dimension_unique_name": u})
