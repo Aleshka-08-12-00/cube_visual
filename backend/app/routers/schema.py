@@ -22,7 +22,7 @@ def dimensions(cube: str = Query(...)):
         f"SELECT [DIMENSION_NAME],[DIMENSION_UNIQUE_NAME] "
         f"FROM $SYSTEM.MDSCHEMA_HIERARCHIES "
         f"WHERE [CUBE_NAME]='{cube_escaped}' "
-        f"AND [HIERARCHY_IS_VISIBLE] "
+        f"AND [HIERARCHY_IS_VISIBLE]=1 "
         f"AND [DIMENSION_UNIQUE_NAME] <> '[Measures]' "
         f"ORDER BY [DIMENSION_NAME]"
     )
@@ -65,7 +65,7 @@ def hierarchies(cube: str = Query(...), dimension_unique_name: str | None = None
     q = (
         "SELECT [HIERARCHY_NAME],[HIERARCHY_UNIQUE_NAME],[DIMENSION_UNIQUE_NAME] "
         "FROM $SYSTEM.MDSCHEMA_HIERARCHIES "
-        f"WHERE [CUBE_NAME]='{cube_escaped}' AND [HIERARCHY_IS_VISIBLE]{where} "
+        f"WHERE [CUBE_NAME]='{cube_escaped}' AND [HIERARCHY_IS_VISIBLE]=1{where} "
         "ORDER BY [HIERARCHY_NAME]"
     )
     cols, rows = fetch_limited(q, 0)
