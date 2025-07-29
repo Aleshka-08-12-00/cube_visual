@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Box, FormControl, InputLabel, MenuItem, Select, Stack, Typography } from '@mui/material'
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts'
 import { QueryRunResponse } from '../types'
@@ -7,6 +7,16 @@ type Props = { result: QueryRunResponse | null }
 export default function ChartView({ result }: Props) {
   const [xField, setXField] = useState<string>('')
   const [yField, setYField] = useState<string>('')
+
+  useEffect(() => {
+    if (!result || result.columns.length < 2) {
+      setXField('')
+      setYField('')
+      return
+    }
+    setXField(result.columns[0])
+    setYField(result.columns[1])
+  }, [result])
 
   const options = result?.columns || []
   const data = useMemo(() => {
@@ -37,19 +47,19 @@ export default function ChartView({ result }: Props) {
       </Stack>
       {data.length > 0 && xField && yField && (
         <Stack gap={4}>
-          <LineChart width={960} height={360} data={data}>
+          <LineChart width={960} height={360} data={data} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey={xField} />
             <YAxis />
             <Tooltip />
-            <Line type="monotone" dataKey={yField} />
+            <Line type="monotone" dataKey={yField} stroke="#1976d2" strokeWidth={2} />
           </LineChart>
-          <BarChart width={960} height={360} data={data}>
+          <BarChart width={960} height={360} data={data} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey={xField} />
             <YAxis />
             <Tooltip />
-            <Bar dataKey={yField} />
+            <Bar dataKey={yField} fill="#1976d2" fillOpacity={0.7} />
           </BarChart>
         </Stack>
       )}

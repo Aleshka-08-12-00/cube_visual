@@ -6,9 +6,22 @@ import MeasureSelector from './MeasureSelector'
 import DimensionTree from './DimensionTree'
 
 type Props = { onResult: (r: QueryRunResponse) => void }
-const DEFAULT_MDX = `SELECT
-  NON EMPTY [Концерн].[Концерн].Members ON ROWS,
-  { [Measures].[реализация руб] } ON COLUMNS
+const DEFAULT_MDX = `WITH
+SET [Months2024] AS
+  NonEmpty(
+    Descendants(
+      [Время].[Год - Квартал - Месяц - День].&[2024],
+      [Время].[Год - Квартал - Месяц - День].[Месяц]
+    ),
+    { [Measures].[реализация руб] }
+  )
+SELECT
+  NON EMPTY
+    [Months2024] * { [Measures].[реализация руб] }
+  ON COLUMNS,
+  NON EMPTY
+    [Товар].[Концерн].Members
+  ON ROWS
 FROM [NextGen]`
 
 export default function QueryBuilder({ onResult }: Props) {
