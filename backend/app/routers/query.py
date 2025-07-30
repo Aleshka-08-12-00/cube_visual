@@ -48,6 +48,19 @@ def _strip_total_row(columns: List[str], rows: List[List[Any]]) -> List[List[Any
         return rows[:-1]
     return rows
 
+
+def _remove_empty_first_value(rows: List[List[Any]]) -> List[List[Any]]:
+    """Drop rows whose first cell is empty."""
+    out = []
+    for r in rows:
+        if not r:
+            continue
+        first = str(r[0]).strip() if r[0] is not None else ""
+        if first == "":
+            continue
+        out.append(r)
+    return out
+
 DEFAULT_MDX = (
     "SELECT\n"
     "  NON EMPTY\n"
@@ -80,6 +93,7 @@ def run(req: RunRequest):
         mdx = DEFAULT_MDX
     cols, rows = fetch(mdx)
     rows = _strip_total_row(cols, rows)
+    rows = _remove_empty_first_value(rows)
     return {"mdx": mdx, "columns": cols, "rows": rows}
 
 @router.get("/health")

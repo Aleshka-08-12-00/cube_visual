@@ -44,3 +44,17 @@ def test_strip_total_row_last(monkeypatch, client):
     assert resp.status_code == 200
     data = resp.json()
     assert data["rows"] == [["A", 10], ["B", 20]]
+
+
+def test_remove_empty_first_cell(monkeypatch, client):
+    cols = ["concern", "value"]
+    rows = [["", 5], ["A", 10], ["B", 20]]
+
+    def fake_fetch(mdx: str):
+        return cols, rows
+
+    monkeypatch.setattr("app.routers.query.fetch", fake_fetch)
+    resp = client.post("/query/run", json={"mdx": "SELECT"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["rows"] == [["A", 10], ["B", 20]]
